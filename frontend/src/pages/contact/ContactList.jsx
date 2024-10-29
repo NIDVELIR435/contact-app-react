@@ -7,18 +7,13 @@ import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
 import { useEffect, useState } from "react";
-import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
-import { db } from "../../db/firebase";
 import { useNavigate } from "react-router-dom";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { IconButton } from "@mui/material";
 import { Button } from "@mui/material";
 import { useNotifications } from "@toolpad/core/useNotifications";
-
-function normalizeData(id, name, email, phone) {
-  return { id, name: name ?? "", email: email ?? "", phone: phone ?? "" };
-}
+import { deleteContact, getContacts } from "../../api/contacts";
 
 const ContactList = () => {
   const [contacts, setContacts] = useState([]);
@@ -26,16 +21,8 @@ const ContactList = () => {
   const navigate = useNavigate();
 
   const getData = async () => {
-    const docSnap = await getDocs(collection(db, "contacts"));
-    const contacts = docSnap.docs.map((doc) => {
-      const mainData = doc.data();
-      return normalizeData(
-        doc.id,
-        mainData.name,
-        mainData.email,
-        mainData.phone,
-      );
-    });
+    const contacts = await getContacts();
+    console.log(contacts);
     setContacts(contacts);
   };
 
@@ -44,8 +31,7 @@ const ContactList = () => {
   };
 
   const handleRowDeleteClick = async (id) => {
-    const docRef = doc(db, "contacts", id);
-    await deleteDoc(docRef).catch(() => {
+    await deleteContact(id).catch(() => {
       notifications.show("Cannot delete contact!", {
         severity: "error",
         autoHideDuration: 3000,
